@@ -11,6 +11,9 @@ Y="\e[33m"
 N="\e[0m"
 G="\e[32m"
 
+echo "Please enter DB Password:"
+read -s mysql_root_password
+
 VALIDATE(){
    if [ $1 -ne 0 ]
    then
@@ -41,5 +44,16 @@ VALIDATE $? "Enabling MYSql Server"
 systemctl start mysqld &>>$LOGFILE
 VALIDATE $? "Starting MYSql Server"
 
-mysql_secure_installation --set-root-pass ExpenseApp@1 &>>$LOGFILE
-VALIDATE $? "Setting up root Password"
+#mysql_secure_installation --set-root-pass ExpenseApp@1 &>>$LOGFILE
+#VALIDATE $? "Setting up root Password"
+
+#Below code will be useful for idempotent nature
+mysql -h mdom.fun -uroot -p${mysql_root_password} -e 'show databases;' &>>LOGFILE
+if [ $? -ne 0 ]
+then
+    mysql_secure_installation --set-root-pass ${mysql_root_password}
+    VALIDATE $? "Setting up root Password"
+
+
+else
+    echo "MYSQL Root Password is already set u..$Y Skipping $N"
